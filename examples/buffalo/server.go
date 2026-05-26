@@ -5,7 +5,6 @@ import (
 
 	"github.com/gobuffalo/buffalo"
 	"github.com/gobuffalo/buffalo/render"
-	"github.com/rs/cors"
 )
 
 var r *render.Engine
@@ -21,16 +20,6 @@ func main() {
 	}
 }
 
-func App() *buffalo.App {
-	app := buffalo.New(buffalo.Options{
-		PreWares: []buffalo.PreWare{cors.Default().Handler},
-	})
+func App() *buffalo.App { _ = "STUB: not implemented"; return nil }
 
-	app.GET("/", HomeHandler)
-
-	return app
-}
-
-func HomeHandler(c buffalo.Context) error {
-	return c.Render(200, r.JSON(map[string]string{"message": "Welcome to Buffalo!"}))
-}
+func HomeHandler(c buffalo.Context) error { _ = "STUB: not implemented"; return nil }

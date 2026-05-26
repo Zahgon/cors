@@ -21,12 +21,7 @@ The resulting handler is a standard net/http handler.
 package cors
 
 import (
-	"log"
 	"net/http"
-	"os"
-	"slices"
-	"strconv"
-	"strings"
 
 	"github.com/rs/cors/internal"
 )
@@ -140,347 +135,126 @@ type Cors struct {
 }
 
 // New creates a new Cors handler with the provided options.
-func New(options Options) *Cors {
-	c := &Cors{
-		allowCredentials:    options.AllowCredentials,
-		allowPrivateNetwork: options.AllowPrivateNetwork,
-		optionPassthrough:   options.OptionsPassthrough,
-		Log:                 options.Logger,
-	}
-	if options.Debug && c.Log == nil {
-		c.Log = log.New(os.Stdout, "[cors] ", log.LstdFlags)
-	}
+func New(options Options) *Cors { _ = "STUB: not implemented"; return nil }
 
-	// Allowed origins
-	switch {
-	case options.AllowOriginVaryRequestFunc != nil:
-		c.allowOriginFunc = options.AllowOriginVaryRequestFunc
-	case options.AllowOriginRequestFunc != nil:
-		c.allowOriginFunc = func(r *http.Request, origin string) (bool, []string) {
-			return options.AllowOriginRequestFunc(r, origin), nil
-		}
-	case options.AllowOriginFunc != nil:
-		c.allowOriginFunc = func(r *http.Request, origin string) (bool, []string) {
-			return options.AllowOriginFunc(origin), nil
-		}
-	case len(options.AllowedOrigins) == 0:
-		if c.allowOriginFunc == nil {
-			// Default is all origins
-			c.allowedOriginsAll = true
-		}
-	default:
-		c.allowedOrigins = []string{}
-		c.allowedWOrigins = []wildcard{}
-		for _, origin := range options.AllowedOrigins {
-			// Note: for origins matching, the spec requires a case-sensitive matching.
-			// As it may error prone, we chose to ignore the spec here.
-			origin = strings.ToLower(origin)
-			if origin == "*" {
-				// If "*" is present in the list, turn the whole list into a match all
-				c.allowedOriginsAll = true
-				c.allowedOrigins = nil
-				c.allowedWOrigins = nil
-				break
-			} else if prefix, suffix, ok := strings.Cut(origin, "*"); ok {
-				// Split the origin in two: start and end string without the *
-				w := wildcard{prefix, suffix}
-				c.allowedWOrigins = append(c.allowedWOrigins, w)
-			} else {
-				c.allowedOrigins = append(c.allowedOrigins, origin)
-			}
-		}
-	}
+// Allowed origins
 
-	// Allowed Headers
-	// Note: the Fetch standard guarantees that CORS-unsafe request-header names
-	// (i.e. the values listed in the Access-Control-Request-Headers header)
-	// are lowercase; see https://fetch.spec.whatwg.org/#cors-unsafe-request-header-names.
-	if len(options.AllowedHeaders) == 0 {
-		// Use sensible defaults
-		c.allowedHeaders = internal.NewSortedSet("accept", "content-type", "x-requested-with")
-	} else {
-		normalized := convert(options.AllowedHeaders, strings.ToLower)
-		c.allowedHeaders = internal.NewSortedSet(normalized...)
-		if slices.Contains(options.AllowedHeaders, "*") {
-			c.allowedHeadersAll = true
-			c.allowedHeaders = internal.SortedSet{}
-		}
-	}
+// Default is all origins
 
-	// Allowed Methods
-	if len(options.AllowedMethods) == 0 {
-		// Default is spec's "simple" methods
-		c.allowedMethods = []string{http.MethodGet, http.MethodPost, http.MethodHead}
-	} else {
-		c.allowedMethods = options.AllowedMethods
-	}
+// Note: for origins matching, the spec requires a case-sensitive matching.
+// As it may error prone, we chose to ignore the spec here.
 
-	// Options Success Status Code
-	if options.OptionsSuccessStatus == 0 {
-		c.optionsSuccessStatus = http.StatusNoContent
-	} else {
-		c.optionsSuccessStatus = options.OptionsSuccessStatus
-	}
+// If "*" is present in the list, turn the whole list into a match all
 
-	// Pre-compute exposed headers header value
-	if len(options.ExposedHeaders) > 0 {
-		c.exposedHeaders = []string{strings.Join(convert(options.ExposedHeaders, http.CanonicalHeaderKey), ", ")}
-	}
+// Split the origin in two: start and end string without the *
 
-	// Pre-compute prefight Vary header to save allocations
-	if c.allowPrivateNetwork {
-		c.preflightVary = []string{"Origin, Access-Control-Request-Method, Access-Control-Request-Headers, Access-Control-Request-Private-Network"}
-	} else {
-		c.preflightVary = []string{"Origin, Access-Control-Request-Method, Access-Control-Request-Headers"}
-	}
+// Allowed Headers
+// Note: the Fetch standard guarantees that CORS-unsafe request-header names
+// (i.e. the values listed in the Access-Control-Request-Headers header)
+// are lowercase; see https://fetch.spec.whatwg.org/#cors-unsafe-request-header-names.
 
-	// Precompute max-age
-	if options.MaxAge > 0 {
-		c.maxAge = []string{strconv.Itoa(options.MaxAge)}
-	} else if options.MaxAge < 0 {
-		c.maxAge = []string{"0"}
-	}
+// Use sensible defaults
 
-	return c
-}
+// Allowed Methods
+
+// Default is spec's "simple" methods
+
+// Options Success Status Code
+
+// Pre-compute exposed headers header value
+
+// Pre-compute prefight Vary header to save allocations
+
+// Precompute max-age
 
 // Default creates a new Cors handler with default options.
-func Default() *Cors {
-	return New(Options{})
-}
+func Default() *Cors { _ = "STUB: not implemented"; return nil }
 
 // AllowAll create a new Cors handler with permissive configuration allowing all
 // origins with all standard methods with any header and credentials.
-func AllowAll() *Cors {
-	return New(Options{
-		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{
-			http.MethodHead,
-			http.MethodGet,
-			http.MethodPost,
-			http.MethodPut,
-			http.MethodPatch,
-			http.MethodDelete,
-		},
-		AllowedHeaders:   []string{"*"},
-		AllowCredentials: false,
-	})
-}
+func AllowAll() *Cors { _ = "STUB: not implemented"; return nil }
 
 // Handler apply the CORS specification on the request, and add relevant CORS headers
 // as necessary.
 func (c *Cors) Handler(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
-			c.logf("Handler: Preflight request")
-			c.handlePreflight(w, r)
-			// Preflight requests are standalone and should stop the chain as some other
-			// middleware may not handle OPTIONS requests correctly. One typical example
-			// is authentication middleware ; OPTIONS requests won't carry authentication
-			// headers (see #1)
-			if c.optionPassthrough {
-				h.ServeHTTP(w, r)
-			} else {
-				w.WriteHeader(c.optionsSuccessStatus)
-			}
-		} else {
-			c.logf("Handler: Actual request")
-			c.handleActualRequest(w, r)
-			h.ServeHTTP(w, r)
-		}
-	})
+	_ = "STUB: not implemented"
+	return *new(http.Handler)
 }
+
+// Preflight requests are standalone and should stop the chain as some other
+// middleware may not handle OPTIONS requests correctly. One typical example
+// is authentication middleware ; OPTIONS requests won't carry authentication
+// headers (see #1)
 
 // HandlerFunc provides Martini compatible handler
 func (c *Cors) HandlerFunc(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
-		c.logf("HandlerFunc: Preflight request")
-		c.handlePreflight(w, r)
-
-		w.WriteHeader(c.optionsSuccessStatus)
-	} else {
-		c.logf("HandlerFunc: Actual request")
-		c.handleActualRequest(w, r)
-	}
+	_ = "STUB: not implemented"
+	return
 }
 
 // Negroni compatible interface
 func (c *Cors) ServeHTTP(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
-		c.logf("ServeHTTP: Preflight request")
-		c.handlePreflight(w, r)
-		// Preflight requests are standalone and should stop the chain as some other
-		// middleware may not handle OPTIONS requests correctly. One typical example
-		// is authentication middleware ; OPTIONS requests won't carry authentication
-		// headers (see #1)
-		if c.optionPassthrough {
-			next(w, r)
-		} else {
-			w.WriteHeader(c.optionsSuccessStatus)
-		}
-	} else {
-		c.logf("ServeHTTP: Actual request")
-		c.handleActualRequest(w, r)
-		next(w, r)
-	}
+	_ = "STUB: not implemented"
+	return
 }
+
+// Preflight requests are standalone and should stop the chain as some other
+// middleware may not handle OPTIONS requests correctly. One typical example
+// is authentication middleware ; OPTIONS requests won't carry authentication
+// headers (see #1)
 
 // handlePreflight handles pre-flight CORS requests
 func (c *Cors) handlePreflight(w http.ResponseWriter, r *http.Request) {
-	headers := w.Header()
-	origin := r.Header.Get("Origin")
-
-	// Always set Vary headers
-	// see https://github.com/rs/cors/issues/10,
-	//     https://github.com/rs/cors/commit/dbdca4d95feaa7511a46e6f1efb3b3aa505bc43f#commitcomment-12352001
-	if vary, found := headers["Vary"]; found {
-		headers["Vary"] = append(vary, c.preflightVary[0])
-	} else {
-		headers["Vary"] = c.preflightVary
-	}
-	allowed, additionalVaryHeaders := c.isOriginAllowed(r, origin)
-	if len(additionalVaryHeaders) > 0 {
-		headers.Add("Vary", strings.Join(convert(additionalVaryHeaders, http.CanonicalHeaderKey), ", "))
-	}
-
-	if origin == "" {
-		c.logf("  Preflight aborted: empty origin")
-		return
-	}
-	if !allowed {
-		c.logf("  Preflight aborted: origin '%s' not allowed", origin)
-		return
-	}
-
-	reqMethod := r.Header.Get("Access-Control-Request-Method")
-	if !c.isMethodAllowed(reqMethod) {
-		c.logf("  Preflight aborted: method '%s' not allowed", reqMethod)
-		return
-	}
-	// Note: the Fetch standard guarantees that at most one
-	// Access-Control-Request-Headers header is present in the preflight request;
-	// see step 5.2 in https://fetch.spec.whatwg.org/#cors-preflight-fetch-0.
-	// However, some gateways split that header into multiple headers of the same name;
-	// see https://github.com/rs/cors/issues/184.
-	reqHeaders, found := r.Header["Access-Control-Request-Headers"]
-	if found && !c.allowedHeadersAll && !c.allowedHeaders.Accepts(reqHeaders) {
-		c.logf("  Preflight aborted: headers '%v' not allowed", reqHeaders)
-		return
-	}
-	if c.allowedOriginsAll {
-		headers["Access-Control-Allow-Origin"] = headerOriginAll
-	} else {
-		headers["Access-Control-Allow-Origin"] = r.Header["Origin"]
-	}
-	// Spec says: Since the list of methods can be unbounded, simply returning the method indicated
-	// by Access-Control-Request-Method (if supported) can be enough
-	headers["Access-Control-Allow-Methods"] = r.Header["Access-Control-Request-Method"]
-	if found && len(reqHeaders[0]) > 0 {
-		// Spec says: Since the list of headers can be unbounded, simply returning supported headers
-		// from Access-Control-Request-Headers can be enough
-		headers["Access-Control-Allow-Headers"] = reqHeaders
-	}
-	if c.allowCredentials {
-		headers["Access-Control-Allow-Credentials"] = headerTrue
-	}
-	if c.allowPrivateNetwork && r.Header.Get("Access-Control-Request-Private-Network") == "true" {
-		headers["Access-Control-Allow-Private-Network"] = headerTrue
-	}
-	if len(c.maxAge) > 0 {
-		headers["Access-Control-Max-Age"] = c.maxAge
-	}
-	c.logf("  Preflight response headers: %v", headers)
+	_ = "STUB: not implemented"
+	return
 }
+
+// Always set Vary headers
+// see https://github.com/rs/cors/issues/10,
+//     https://github.com/rs/cors/commit/dbdca4d95feaa7511a46e6f1efb3b3aa505bc43f#commitcomment-12352001
+
+// Note: the Fetch standard guarantees that at most one
+// Access-Control-Request-Headers header is present in the preflight request;
+// see step 5.2 in https://fetch.spec.whatwg.org/#cors-preflight-fetch-0.
+// However, some gateways split that header into multiple headers of the same name;
+// see https://github.com/rs/cors/issues/184.
+
+// Spec says: Since the list of methods can be unbounded, simply returning the method indicated
+// by Access-Control-Request-Method (if supported) can be enough
+
+// Spec says: Since the list of headers can be unbounded, simply returning supported headers
+// from Access-Control-Request-Headers can be enough
 
 // handleActualRequest handles simple cross-origin requests, actual request or redirects
 func (c *Cors) handleActualRequest(w http.ResponseWriter, r *http.Request) {
-	headers := w.Header()
-	origin := r.Header.Get("Origin")
-
-	allowed, additionalVaryHeaders := c.isOriginAllowed(r, origin)
-
-	// Always set Vary, see https://github.com/rs/cors/issues/10
-	if vary := headers["Vary"]; vary == nil {
-		headers["Vary"] = headerVaryOrigin
-	} else {
-		headers["Vary"] = append(vary, headerVaryOrigin[0])
-	}
-	if len(additionalVaryHeaders) > 0 {
-		headers.Add("Vary", strings.Join(convert(additionalVaryHeaders, http.CanonicalHeaderKey), ", "))
-	}
-	if origin == "" {
-		c.logf("  Actual request no headers added: missing origin")
-		return
-	}
-	if !allowed {
-		c.logf("  Actual request no headers added: origin '%s' not allowed", origin)
-		return
-	}
-
-	// Note that spec does define a way to specifically disallow a simple method like GET or
-	// POST. Access-Control-Allow-Methods is only used for pre-flight requests and the
-	// spec doesn't instruct to check the allowed methods for simple cross-origin requests.
-	// We think it's a nice feature to be able to have control on those methods though.
-	if !c.isMethodAllowed(r.Method) {
-		c.logf("  Actual request no headers added: method '%s' not allowed", r.Method)
-		return
-	}
-	if c.allowedOriginsAll {
-		headers["Access-Control-Allow-Origin"] = headerOriginAll
-	} else {
-		headers["Access-Control-Allow-Origin"] = r.Header["Origin"]
-	}
-	if len(c.exposedHeaders) > 0 {
-		headers["Access-Control-Expose-Headers"] = c.exposedHeaders
-	}
-	if c.allowCredentials {
-		headers["Access-Control-Allow-Credentials"] = headerTrue
-	}
-	c.logf("  Actual response added headers: %v", headers)
+	_ = "STUB: not implemented"
+	return
 }
+
+// Always set Vary, see https://github.com/rs/cors/issues/10
+
+// Note that spec does define a way to specifically disallow a simple method like GET or
+// POST. Access-Control-Allow-Methods is only used for pre-flight requests and the
+// spec doesn't instruct to check the allowed methods for simple cross-origin requests.
+// We think it's a nice feature to be able to have control on those methods though.
 
 // convenience method. checks if a logger is set.
-func (c *Cors) logf(format string, a ...any) {
-	if c.Log != nil {
-		c.Log.Printf(format, a...)
-	}
-}
+func (c *Cors) logf(format string, a ...any) { _ = "STUB: not implemented"; return }
 
 // check the Origin of a request. No origin at all is also allowed.
-func (c *Cors) OriginAllowed(r *http.Request) bool {
-	origin := r.Header.Get("Origin")
-	allowed, _ := c.isOriginAllowed(r, origin)
-	return allowed
-}
+func (c *Cors) OriginAllowed(r *http.Request) bool { _ = "STUB: not implemented"; return false }
 
 // isOriginAllowed checks if a given origin is allowed to perform cross-domain requests
 // on the endpoint
 func (c *Cors) isOriginAllowed(r *http.Request, origin string) (allowed bool, varyHeaders []string) {
-	if c.allowOriginFunc != nil {
-		return c.allowOriginFunc(r, origin)
-	}
-	if c.allowedOriginsAll {
-		return true, nil
-	}
-	origin = strings.ToLower(origin)
-	if slices.Contains(c.allowedOrigins, origin) {
-		return true, nil
-	}
-	return slices.ContainsFunc(c.allowedWOrigins, func(w wildcard) bool {
-		return w.match(origin)
-	}), nil
+	_ = "STUB: not implemented"
+	return false, nil
 }
 
 // isMethodAllowed checks if a given method can be used as part of a cross-domain request
 // on the endpoint
-func (c *Cors) isMethodAllowed(method string) bool {
-	if len(c.allowedMethods) == 0 {
-		// If no method allowed, always return false, even for preflight request
-		return false
-	}
-	if method == http.MethodOptions {
-		// Always allow preflight requests
-		return true
-	}
-	return slices.Contains(c.allowedMethods, method)
-}
+func (c *Cors) isMethodAllowed(method string) bool { _ = "STUB: not implemented"; return false }
+
+// If no method allowed, always return false, even for preflight request
+
+// Always allow preflight requests

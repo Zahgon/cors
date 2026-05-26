@@ -3,8 +3,6 @@
 package gin
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/rs/cors"
 )
@@ -22,39 +20,19 @@ type corsWrapper struct {
 
 // build transforms wrapped cors.Cors handler into Gin middleware.
 func (c corsWrapper) build() gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		c.HandlerFunc(ctx.Writer, ctx.Request)
-		if !c.optionsPassthrough &&
-			ctx.Request.Method == http.MethodOptions &&
-			ctx.GetHeader("Access-Control-Request-Method") != "" {
-			// Abort processing next Gin middlewares.
-			ctx.AbortWithStatus(c.optionsSuccessStatus)
-		}
-	}
+	_ = "STUB: not implemented"
+	return *new(gin.HandlerFunc)
 }
+
+// Abort processing next Gin middlewares.
 
 // AllowAll creates a new CORS Gin middleware with permissive configuration
 // allowing all origins with all standard methods with any header and
 // credentials.
-func AllowAll() gin.HandlerFunc {
-	return corsWrapper{Cors: cors.AllowAll()}.build()
-}
+func AllowAll() gin.HandlerFunc { _ = "STUB: not implemented"; return *new(gin.HandlerFunc) }
 
 // Default creates a new CORS Gin middleware with default options.
-func Default() gin.HandlerFunc {
-	return corsWrapper{Cors: cors.Default()}.build()
-}
+func Default() gin.HandlerFunc { _ = "STUB: not implemented"; return *new(gin.HandlerFunc) }
 
 // New creates a new CORS Gin middleware with the provided options.
-func New(options Options) gin.HandlerFunc {
-	status := options.OptionsSuccessStatus
-	if status == 0 {
-		status = http.StatusNoContent
-	}
-	wrapper := corsWrapper{
-		Cors:                 cors.New(options),
-		optionsSuccessStatus: status,
-		optionsPassthrough:   options.OptionsPassthrough,
-	}
-	return wrapper.build()
-}
+func New(options Options) gin.HandlerFunc { _ = "STUB: not implemented"; return *new(gin.HandlerFunc) }

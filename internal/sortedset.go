@@ -1,11 +1,6 @@
 // adapted from github.com/jub0bs/cors
 package internal
 
-import (
-	"sort"
-	"strings"
-)
-
 // A SortedSet represents a mathematical set of strings sorted in
 // lexicographical order.
 // Each element has a unique position ranging from 0 (inclusive)
@@ -18,39 +13,20 @@ type SortedSet struct {
 
 // NewSortedSet returns a SortedSet that contains all of elems,
 // but no other elements.
-func NewSortedSet(elems ...string) SortedSet {
-	sort.Strings(elems)
-	m := make(map[string]int)
-	var maxLen int
-	i := 0
-	for _, s := range elems {
-		if _, exists := m[s]; exists {
-			continue
-		}
-		m[s] = i
-		i++
-		maxLen = max(maxLen, len(s))
-	}
-	return SortedSet{
-		m:      m,
-		maxLen: maxLen,
-	}
-}
+func NewSortedSet(elems ...string) SortedSet { _ = "STUB: not implemented"; return *new(SortedSet) }
 
 // Size returns the cardinality of set.
 func (set SortedSet) Size() int {
-	return len(set.m)
+	_ = "STUB: not implemented"
+
+	// String sorts joins the elements of set (in lexicographical order)
+	// with a comma and returns the resulting string.
+	return 0
 }
 
-// String sorts joins the elements of set (in lexicographical order)
-// with a comma and returns the resulting string.
-func (set SortedSet) String() string {
-	elems := make([]string, len(set.m))
-	for elem, i := range set.m {
-		elems[i] = elem // safe indexing, by construction of SortedSet
-	}
-	return strings.Join(elems, ",")
-}
+func (set SortedSet) String() string { _ = "STUB: not implemented"; return "" }
+
+// safe indexing, by construction of SortedSet
 
 // Accepts reports whether values is a sequence of list-based field values
 // whose elements are
@@ -58,58 +34,29 @@ func (set SortedSet) String() string {
 //   - sorted in lexicographical order,
 //   - unique.
 func (set SortedSet) Accepts(values []string) bool {
-	var ( // effectively constant
-		maxLen = maxOWSBytes + set.maxLen + maxOWSBytes + 1 // +1 for comma
-	)
-	var (
-		posOfLastNameSeen = -1
-		name              string
-		commaFound        bool
-		emptyElements     int
-		ok                bool
-	)
-	for _, s := range values {
-		for {
-			// As a defense against maliciously long names in s,
-			// we process only a small number of s's leading bytes per iteration.
-			name, s, commaFound = cutAtComma(s, maxLen)
-			name, ok = trimOWS(name, maxOWSBytes)
-			if !ok {
-				return false
-			}
-			if name == "" {
-				// RFC 9110 requires recipients to tolerate
-				// "a reasonable number of empty list elements"; see
-				// https://httpwg.org/specs/rfc9110.html#abnf.extension.recipient.
-				emptyElements++
-				if emptyElements > maxEmptyElements {
-					return false
-				}
-				if !commaFound { // We have now exhausted the names in s.
-					break
-				}
-				continue
-			}
-			pos, ok := set.m[name]
-			if !ok {
-				return false
-			}
-			// The names in s are expected to be sorted in lexicographical order
-			// and to each appear at most once.
-			// Therefore, the positions (in set) of the names that
-			// appear in s should form a strictly increasing sequence.
-			// If that's not actually the case, bail out.
-			if pos <= posOfLastNameSeen {
-				return false
-			}
-			posOfLastNameSeen = pos
-			if !commaFound { // We have now exhausted the names in s.
-				break
-			}
-		}
-	}
-	return true
+	_ = "STUB: not implemented"
+	// effectively constant
+	return false
 }
+
+// +1 for comma
+
+// As a defense against maliciously long names in s,
+// we process only a small number of s's leading bytes per iteration.
+
+// RFC 9110 requires recipients to tolerate
+// "a reasonable number of empty list elements"; see
+// https://httpwg.org/specs/rfc9110.html#abnf.extension.recipient.
+
+// We have now exhausted the names in s.
+
+// The names in s are expected to be sorted in lexicographical order
+// and to each appear at most once.
+// Therefore, the positions (in set) of the names that
+// appear in s should form a strictly increasing sequence.
+// If that's not actually the case, bail out.
+
+// We have now exhausted the names in s.
 
 const (
 	maxOWSBytes      = 1  // number of leading/trailing OWS bytes tolerated
@@ -117,14 +64,12 @@ const (
 )
 
 func cutAtComma(s string, n int) (before, after string, found bool) {
+	_ = "STUB: not implemented"
 	// Note: this implementation draws inspiration from strings.Cut's.
-	end := min(len(s), n)
-	if i := strings.IndexByte(s[:end], ','); i >= 0 {
-		after = s[i+1:] // deal with this first to save one bounds check
-		return s[:i], after, true
-	}
-	return s, "", false
+	return "", "", false
 }
+
+// deal with this first to save one bounds check
 
 // TrimOWS trims up to n bytes of [optional whitespace (OWS)]
 // from the start of and/or the end of s.
@@ -135,49 +80,10 @@ func cutAtComma(s string, n int) (before, after string, found bool) {
 //
 // [optional whitespace (OWS)]: https://httpwg.org/specs/rfc9110.html#whitespace
 func trimOWS(s string, n int) (trimmed string, ok bool) {
-	if s == "" {
-		return s, true
-	}
-	trimmed, ok = trimRightOWS(s, n)
-	if !ok {
-		return s, false
-	}
-	trimmed, ok = trimLeftOWS(trimmed, n)
-	if !ok {
-		return s, false
-	}
-	return trimmed, true
+	_ = "STUB: not implemented"
+	return "", false
 }
 
-func trimLeftOWS(s string, n int) (string, bool) {
-	sCopy := s
-	var i int
-	for len(s) > 0 {
-		if i > n {
-			return sCopy, false
-		}
-		if !(s[0] == ' ' || s[0] == '\t') {
-			break
-		}
-		s = s[1:]
-		i++
-	}
-	return s, true
-}
+func trimLeftOWS(s string, n int) (string, bool) { _ = "STUB: not implemented"; return "", false }
 
-func trimRightOWS(s string, n int) (string, bool) {
-	sCopy := s
-	var i int
-	for len(s) > 0 {
-		if i > n {
-			return sCopy, false
-		}
-		last := len(s) - 1
-		if !(s[last] == ' ' || s[last] == '\t') {
-			break
-		}
-		s = s[:last]
-		i++
-	}
-	return s, true
-}
+func trimRightOWS(s string, n int) (string, bool) { _ = "STUB: not implemented"; return "", false }
